@@ -233,3 +233,23 @@ function loadData() {
 // 實作網頁截圖功能
 function captureScreen() {
   const area = document.getElementById("captureArea");
+// 隱藏不需要截圖的按鈕和分頁標籤
+document.querySelectorAll('.no-print').forEach(el => el.style.display = 'none');
+html2canvas(area, { useCORS: true, scale: 2, backgroundColor: "#f5f3ee" }).then(canvas => {
+// 截圖完畢後還原隱藏的按鈕
+document.querySelectorAll('.no-print').forEach(el => el.style.display = '');
+// 導出圖片並下載
+const link = document.createElement("a");
+link.download = "吉他每日練習進度.png";
+link.href = canvas.toDataURL("image/png");
+link.click();
+}).catch(err => {
+document.querySelectorAll('.no-print').forEach(el => el.style.display = '');
+alert("截圖失敗，請手動使用手機內建功能截圖");
+});
+}
+document.getElementById("reflection").addEventListener("input", saveData);
+makeItems("standardList", plans.standard);
+makeItems("advancedList", plans.advanced);
+makeItems("dailyList", plans.daily, true);
+loadData(); updateProgress();
