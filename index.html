@@ -4,64 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>吉他每日練習選單</title>
+<!-- 引入截圖必備的 html2canvas 程式庫 -->
+<script src="https://cloudflare.com"></script>
 <style>
-:root {
-  --ink:#292d32;
-  --muted:#707782;
-  --paper:#f5f3ee;
-  --card:#ffffff;
-  --accent:#527665;
-  --line:#e5e2da;
-}
+:root { --ink:#292d32; --muted:#707782; --paper:#f5f3ee; --card:#ffffff; --accent:#527665; --line:#e5e2da; }
 * { box-sizing:border-box; }
-body {
-  margin:0;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC", "PingFang TC",sans-serif;
-  line-height:1.65;
-}
-header {
-  background:#303d37;
-  color:white;
-  padding:32px 20px 25px;
-}
+body { margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif; line-height:1.65; }
+header { background:#303d37; color:white; padding:32px 20px 25px; }
 .wrap { max-width:850px; margin:auto; padding:20px; }
 header .wrap { padding:0 20px; }
 .eyebrow { font-size:12px; letter-spacing:3px; opacity:.75; }
 h1 { font-size:clamp(25px,5vw,36px); margin:8px 0; }
 .subtitle { color:#e0e8e2; font-size:14px; }
 .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
-button {
-  font:inherit; cursor:pointer; border:0; border-radius:10px;
-  padding:10px 15px;
-}
+button { font:inherit; cursor:pointer; border:0; border-radius:10px; padding:10px 15px; }
 .tab { background:#e6e4dd; color:var(--ink); }
 .tab.active { background:var(--accent); color:white; }
-.card {
-  background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:20px; margin-bottom:16px;
-}
+.card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px; }
 h2 { font-size:21px; margin:0 0 5px; }
 h3 { font-size:16px; margin:0 0 5px; }
 .muted { color:var(--muted); font-size:13px; }
-.item {
-  display:flex; gap:12px; align-items:flex-start;
-  padding:13px 0; border-bottom:1px solid var(--line);
-}
+.item { display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
 .item:last-child { border-bottom:0; }
 .item input { width:19px; height:19px; margin-top:5px; accent-color:var(--accent); }
 .item-main { flex:1; min-width:0; }
 .item-title { font-weight:650; }
 .detail { font-size:13px; color:var(--muted); margin-top:3px; }
-.time {
-  white-space:nowrap; font-size:12px; font-weight:700;
-  background:#f0eee8; padding:4px 8px; border-radius:7px;
-}
-.pill {
-  display:inline-block; background:#e7eee8; color:#355d49;
-  border-radius:20px; padding:3px 9px; font-size:12px;
-}
+.time { white-space:nowrap; font-size:12px; font-weight:700; background:#f0eee8; padding:4px 8px; border-radius:7px; }
+.pill { display:inline-block; background:#e7eee8; color:#355d49; border-radius:20px; padding:3px 9px; font-size:12px; }
 .progress-bg { height:9px; background:#e9e7e0; border-radius:9px; overflow:hidden; margin:12px 0; }
 .progress { height:100%; background:var(--accent); width:0%; transition:width .2s; }
 .stats { display:flex; justify-content:space-between; gap:10px; font-size:13px; }
@@ -73,9 +43,11 @@ h3 { font-size:16px; margin:0 0 5px; }
 .panel[hidden] { display:none; }
 .tip { background:#f1f4ef; padding:13px 15px; border-radius:10px; font-size:13px; }
 footer { text-align:center; color:var(--muted); font-size:12px; padding:12px 0 30px; }
+@media(max-width:480px) { .wrap { padding:14px; } .card { padding:16px; } .time { font-size:11px; padding:3px 6px; } }
 </style>
 </head>
 <body>
+<div id="captureArea"> <!-- 截圖範圍包覆整個網頁內容 -->
 <header>
   <div class="wrap">
     <div class="eyebrow">GUITAR DAILY PRACTICE</div>
@@ -83,12 +55,181 @@ footer { text-align:center; color:var(--muted); font-size:12px; padding:12px 0 3
     <div class="subtitle">每天進步一點點，讓練習成為習慣。</div>
   </div>
 </header>
+
 <main class="wrap">
-  <!-- 完整介面與修復後的 JS 資料渲染邏輯已內含 -->
-  <p>請將修正後的完整 HTML 內容複製並覆蓋至您的 GitHub 專案中。</p>
+  <nav class="tabs no-print">
+    <button class="tab active" data-tab="standard">入門版・30 分鐘</button>
+    <button class="tab" data-tab="advanced">進階版・60 分鐘</button>
+    <button class="tab" data-tab="daily">每日任務卡・XP</button>
+  </nav>
+
+  <section class="card">
+    <div class="stats">
+      <span>今日完成進度</span>
+      <strong id="progressText">0 / 5 項</strong>
+    </div>
+    <div class="progress-bg"><div class="progress" id="progressBar"></div></div>
+    <div class="stats">
+      <span class="muted" id="progressHint">開始今天的練習吧！</span>
+      <span class="pill" id="modeLabel">入門練習</span>
+    </div>
+  </section>
+
+  <section class="panel" id="standard">
+    <div class="card">
+      <h2>入門版｜30 分鐘</h2>
+      <p class="muted">適合初學者、日常維持基本手感的基礎練習。</p>
+      <div id="standardList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="advanced" hidden>
+    <div class="card">
+      <h2>進階版｜60 分鐘</h2>
+      <p class="muted">適合已有基礎，希望全面加強技巧、節奏與完整度的人。</p>
+      <div id="advancedList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="daily" hidden>
+    <div class="card">
+      <h2>每日任務卡</h2>
+      <p class="muted">完成任務累積今天的 XP 經驗值。</p>
+      <div class="stats">
+        <span>今日累積 XP</span>
+        <span><span class="big" id="xpTotal">0</span> XP</span>
+      </div>
+      <div class="progress-bg"><div class="progress" id="xpBar"></div></div>
+      <div class="stats">
+        <span id="xpProgress">完成 0 / 5 項</span>
+        <span id="xpPercent">0%</span>
+      </div>
+      <div id="dailyList"></div>
+    </div>
+    <div class="card">
+      <h3>今日練習紀錄</h3>
+      <textarea id="reflection" rows="4" style="width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit" placeholder="今天最順的地方、遇到的問題或明天的目標..."></textarea>
+    </div>
+  </section>
+
+  <div class="actions no-print">
+    <button class="primary" onclick="captureScreen()">截圖該網頁畫面</button>
+    <button class="secondary" onclick="resetCurrent()">重設目前勾選</button>
+    <button class="secondary" onclick="resetAll()">全部重設</button>
+  </div>
+
+  <div class="tip">
+    <strong>老師的小提醒</strong><br>
+    1. 練習前先調音。 2. 從慢速開始，穩定後再增加 BPM。 3. 手部不適請立即休息。
+  </div>
 </main>
+<footer>GUITAR PRACTICE PLAN</footer>
+</div>
+
 <script>
-// 已修正陣列解構與渲染邏輯確保選項正常顯示
-</script>
-</body>
-</html>
+const plans = {
+  standard: [
+    ["暖身與調音","調整坐姿、放鬆雙手，確認六弦標準音準。",5],
+    ["左手基本功","練習 1-2-3-4 爬格子，注意每個音清楚乾淨。",5],
+    ["右手技巧與節奏","練習分解和弦、基礎刷弦或節拍器拍擊。",5],
+    ["和弦與轉換","練習 C、G、Am、F 等常用和弦慢速反覆轉換。",5],
+    ["歌曲分段練習","選一首目前學的歌，專攻最容易出錯的小節。",10]
+  ],
+  advanced: [
+    ["暖身與基本功","確認音準、手部放鬆，練習爬格子與勾擊弦技巧。",5],
+    ["左手與橫按技巧","專項訓練大橫按把位轉換，消除雜音。",10],
+    ["右手技巧與切分音","配合節拍器，練習切分音、切音與複雜刷弦節奏。",10],
+    ["音階與伴奏型","練習大小調音階，嘗試不同的琶音力度控制。",10],
+    ["歌曲專項拆解","針對困難演奏片段逐小節分段拆解，由慢到快。",15],
+    ["完整演奏錄音","不中斷完整彈奏全曲並錄音，記錄需改善之處。",10]
+  ],
+  daily: [
+    ["基本技巧","完成 10 分鐘基本功爬格子訓練。",10],
+    ["節奏訓練","完成節拍器配合或刷弦節奏練習。",15],
+    ["和弦轉換","完成特定困難和弦的無縫切換練習。",15],
+    ["旋律指法","完成一段旋律、音階或solo指法訓練。",10],
+    ["歌曲錄音","完成今天設定的歌曲目標並錄製成果。",20]
+  ]
+};
+
+let current = "standard";
+
+// 渲染清單（正確讀取陣列子項）
+function makeItems(id, items, isDaily=false) {
+  const root = document.getElementById(id);
+  root.innerHTML = "";
+  items.forEach((item, i) => {
+    const el = document.createElement("label"); el.className = "item";
+    const cb = document.createElement("input"); cb.type = "checkbox";
+    cb.dataset.group = id; cb.dataset.index = i;
+    cb.addEventListener("change", updateProgress);
+
+    const main = document.createElement("div"); main.className = "item-main";
+    const title = document.createElement("div"); title.className = "item-title"; title.textContent = item[0];
+    const detail = document.createElement("div"); detail.className = "detail"; detail.textContent = item[1];
+    main.append(title, detail);
+
+    const badge = document.createElement("span"); badge.className = isDaily ? "xp" : "time";
+    badge.textContent = isDaily ? "+" + item[2] + " XP" : item[2] + " 分鐘";
+    el.append(cb, main, badge); root.appendChild(el);
+  });
+}
+
+// 更新進度與計算
+function updateProgress() {
+  const checkboxes = document.querySelectorAll(`input[data-group="${current}List"]`);
+  const total = checkboxes.length;
+  const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+  
+  document.getElementById("progressText").textContent = `${checked} / ${total} 項`;
+  const percent = total > 0 ? (checked / total) * 100 : 0;
+  document.getElementById("progressBar").style.width = `${percent}%`;
+
+  const hint = document.getElementById("progressHint");
+  hint.textContent = percent === 100 ? "太棒了！今日練習全部達成！" : (percent > 0 ? "持續前進，加油！" : "開始今天的練習吧！");
+
+  if (current === "daily") {
+    let currentXp = 0, maxXp = 0;
+    checkboxes.forEach((cb, idx) => { maxXp += plans.daily[idx][2]; if (cb.checked) currentXp += plans.daily[idx][2]; });
+    document.getElementById("xpTotal").textContent = currentXp;
+    document.getElementById("xpProgress").textContent = `完成 ${checked} / ${total} 項`;
+    const xpPercent = maxXp > 0 ? (currentXp / maxXp) * 100 : 0;
+    document.getElementById("xpBar").style.width = `${xpPercent}%`;
+    document.getElementById("xpPercent").textContent = `${Math.round(xpPercent)}%`;
+  }
+  saveData();
+}
+
+// 分頁切換
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active"); current = tab.dataset.tab;
+    document.querySelectorAll(".panel").forEach(p => p.hidden = true);
+    document.getElementById(current).hidden = false;
+    const labels = { standard: "入門練習", advanced: "進階練習", daily: "每日 XP 任務" };
+    document.getElementById("modeLabel").textContent = labels[current];
+    updateProgress();
+  });
+});
+
+function resetCurrent() { document.querySelectorAll(`input[data-group="${current}List"]`).forEach(cb => cb.checked = false); updateProgress(); }
+function resetAll() { document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false); document.getElementById("reflection").value = ""; updateProgress(); }
+
+// 儲存功能
+function saveData() {
+  const data = {};
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => { data[`${cb.dataset.group}-${cb.dataset.index}`] = cb.checked; });
+  data.reflection = document.getElementById("reflection").value;
+  localStorage.setItem("guitarPracticeData", JSON.stringify(data));
+}
+function loadData() {
+  const dataStr = localStorage.getItem("guitarPracticeData"); if (!dataStr) return;
+  const data = JSON.parse(dataStr);
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => { const k = `${cb.dataset.group}-${cb.dataset.index}`; if (data[k] !== undefined) cb.checked = data[k]; });
+  if (data.reflection !== undefined) document.getElementById("reflection").value = data.reflection;
+}
+
+// 實作網頁截圖功能
+function captureScreen() {
+  const area = document.getElementById("captureArea");
